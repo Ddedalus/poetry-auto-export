@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "poetry-auto-export"
+version = "0.1.0"
+description = "Automatically export dependencies to requirements.txt on every poetry lock"
+authors = ["Hubert Bereś <hubert@springbok.ai>"]
+license = "MIT"
+readme = "README.md"
+
+packages = [{ include = "poetry_auto_export" }]
+[tool.poetry.dependencies]
+python = "^3.10"
+poetry = "^1.7.1"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.1.5"
+pytest = "^7.4.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.plugins."poetry.plugin"]
+auto_export = "poetry_auto_export.PoetryAutoExport"
