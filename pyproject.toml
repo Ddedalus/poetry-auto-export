@@ -5,7 +5,6 @@ description = "Automatically export dependencies to requirements.txt on every po
 authors = ["Hubert Bereś <hubert@springbok.ai>"]
 license = "MIT"
 readme = "README.md"
-
 packages = [{ include = "poetry_auto_export" }]
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -19,6 +18,11 @@ pytest = "^7.4.3"
 
 [tool.poetry.plugins."poetry.application.plugin"]
 poetry-auto-export = "poetry_auto_export.plugin:PoetryAutoExport"
+
+[tool.poetry-auto-export]
+output = "requirements.txt"
+without_hashes = true
+without = ["dev"]
 
 [build-system]
 requires = ["poetry-core"]
