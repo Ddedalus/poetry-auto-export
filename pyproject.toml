@@ -1,10 +1,11 @@
 [tool.poetry]
 name = "poetry-auto-export"
-version = "0.1.1"
-description = "Automatically export dependencies to requirements.txt on every poetry lock"
-authors = ["Hubert Bereś <hubert@springbok.ai>"]
+version = "0.1.2"
+description = "Automatically create requirements.txt on every poetry lock"
+authors = ["Hubert Bereś <h.beres@hotmail.com>"]
 license = "MIT"
 readme = "README.md"
+repository = "https://github.com/Ddedalus/poetry-auto-export"
 packages = [{ include = "poetry_auto_export" }]
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -19,10 +20,6 @@ pytest = "^7.4.3"
 [tool.poetry.plugins."poetry.application.plugin"]
 poetry-auto-export = "poetry_auto_export.plugin:PoetryAutoExport"
 
-[tool.poetry-auto-export]
-output = "requirements.txt"
-without_hashes = true
-without = ["dev"]
 
 [build-system]
 requires = ["poetry-core"]
