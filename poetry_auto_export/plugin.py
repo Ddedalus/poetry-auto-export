@@ -2,8 +2,10 @@ from cleo.events.console_events import TERMINATE
 from cleo.events.console_terminate_event import ConsoleTerminateEvent
 from cleo.events.event import Event
 from cleo.events.event_dispatcher import EventDispatcher
+from cleo.io.outputs.output import Verbosity
 from poetry.console.application import Application
 from poetry.console.commands.add import AddCommand
+from poetry.console.commands.export import ExportCommand
 from poetry.console.commands.lock import LockCommand
 from poetry.console.commands.remove import RemoveCommand
 from poetry.console.commands.update import UpdateCommand
@@ -23,8 +25,7 @@ class PoetryAutoExport(ApplicationPlugin):
     def parse_pyproject(self, pyproject: Container):
         tools = pyproject["tool"]
         if not isinstance(tools, Table):
-            print("Not a container!", type(tools))
-            return {}
+            return None
         config = tools.get("poetry-auto-export", None)
         if config and not isinstance(config, dict):
             raise ValueError(
@@ -38,20 +39,33 @@ class PoetryAutoExport(ApplicationPlugin):
 
     def prepare_export_args(self):
         """Prepare arguments for the export command."""
+        if not self.config:
+            return None
+
         options = []
         if output := self.config.pop("output", None):
-            options.append(f" -o {output}")
+            options.append(f" -o {output!r}")
+        if format := self.config.pop("format", None):
+            options.append(f"--format {format}")
+
         if self.config.pop("without_hashes", None):
             options.append("--without-hashes")
         if self.config.pop("with_credentials", None):
             options.append("--with-credentials")
-        if groups := self.config.pop("with", []):
-            options.append(f"--with {' '.join(groups)}")
-        if groups := self.config.pop("without", []):
-            options.append(f"--without {' '.join(groups)}")
-        if extras := self.config.pop("extras", []):
-            options.append(f"--extras {' '.join(extras)}")
+        if self.config.pop("without_urls", None):
+            options.append("--without-urls")
+        if self.config.pop("all_extras", None):
+            options.append("--all-extras")
 
+        if groups := self.config.pop("with", []):
+            for group in groups:
+                options.append(f"--with={group!r}")
+        if groups := self.config.pop("without", []):
+            for group in groups:
+                options.append(f"--without={group!r}")
+        if extras := self.config.pop("extras", []):
+            for extra in extras:
+                options.append(f"--extras={extra!r}")
         return " ".join(options).strip() or None
 
     def export(self, event: Event, event_name: str, dispatcher: EventDispatcher):
@@ -59,15 +73,28 @@ class PoetryAutoExport(ApplicationPlugin):
             return
         if event.exit_code:
             return
+        if isinstance(event.command, ExportCommand):
+            return
         if not isinstance(
             event.command, (LockCommand, UpdateCommand, AddCommand, RemoveCommand)
         ):
+            event.io.write_line(
+                "Skipping requirements export as command is not modifying lock file.",
+                Verbosity.VERY_VERBOSE,
+            )
             return
 
         if not self.config:
+            event.io.write_line(
+                "Skipping requirements export as no configuration was found.",
+                Verbosity.VERY_VERBOSE,
+            )
             return
 
         out_file = str(self.config["output"])
         args = self.prepare_export_args()
         event.io.output.write_line(f"<fg=blue>Exporting dependencies to</> {out_file}")
+        event.io.write_line(
+            f"> <fg=dark_gray>poetry export {args}</>", Verbosity.VERBOSE
+        )
         event.command.call("export", args)
