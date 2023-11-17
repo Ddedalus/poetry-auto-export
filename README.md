@@ -72,3 +72,14 @@ For some reason, this is [discouraged by poetry](https://python-poetry.org/docs/
 ```bash
 poetry self add poetry-auto-export
 ```
+
+# Roadmap and contributing
+
+The primary goal of the project is to make it more convenient to work with poetry projects in CI/CD and docker. Contributions towards this goal are welcome!
+
+Roadmap:
+
+- unit tests for the plugin
+- integration tests for the plugin
+- proper configuration parsing
+- schema or exhaustive documentation of the supported configuration options
