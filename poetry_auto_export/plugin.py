@@ -93,8 +93,9 @@ class PoetryAutoExport(ApplicationPlugin):
 
         out_file = str(self.config["output"])
         args = self.prepare_export_args()
+
         event.io.output.write_line(f"<fg=blue>Exporting dependencies to</> {out_file}")
-        event.io.write_line(
-            f"> <fg=dark_gray>poetry export {args}</>", Verbosity.VERBOSE
-        )
+        command_message = f"> <fg=dark_gray>poetry export {args}</>"
+        event.io.write_line(command_message, Verbosity.VERBOSE)
+
         event.command.call("export", args)
