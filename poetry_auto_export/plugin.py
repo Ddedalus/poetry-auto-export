@@ -35,6 +35,8 @@ class PoetryAutoExport(ApplicationPlugin):
             raise ValueError(
                 "Invalid pyproject.toml at [tool.poetry-auto-export]; output=str is required."
             )
+        if not config:
+            return None
         return dict(config)
 
     def prepare_export_args(self):
