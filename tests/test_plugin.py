@@ -1,7 +1,21 @@
 import pytest
+from cleo.commands.command import Command
+from cleo.events.console_terminate_event import ConsoleTerminateEvent
+from cleo.events.event import Event
+from cleo.events.event_dispatcher import EventDispatcher
+from cleo.io.inputs.input import Input
+from cleo.io.io import IO
+from cleo.io.outputs.output import Output
 from tomlkit.container import Container
 
-from poetry_auto_export.plugin import PoetryAutoExport
+from poetry_auto_export.plugin import (
+    AddCommand,
+    ExportCommand,
+    LockCommand,
+    PoetryAutoExport,
+    RemoveCommand,
+    UpdateCommand,
+)
 
 
 def test_placeholder():
@@ -81,3 +95,48 @@ def test_prepare_export_args(config, args):
     plugin = PoetryAutoExport()
     plugin.config = config
     assert plugin.prepare_export_args() == args
+
+
+@pytest.fixture
+def dispatcher() -> EventDispatcher:
+    return EventDispatcher()
+
+
+@pytest.fixture
+def event() -> Event:
+    return ConsoleTerminateEvent(
+        command=LockCommand(),
+        exit_code=0,
+        io=IO(input=Input(), output=Output(), error_output=Output()),
+    )
+
+
+@pytest.fixture
+def plugin() -> PoetryAutoExport:
+    p = PoetryAutoExport()
+    p.config = {"output": "requirements.txt"}
+    return p
+
+
+def test_export_skips_random_event(plugin, dispatcher, event):
+    event._command = Command()
+    assert plugin.export(event, "", dispatcher) is None
+
+
+def test_export_skips_on_export(plugin, dispatcher, event):
+    event._command = ExportCommand()
+    assert plugin.export(event, "", dispatcher) is None
+
+
+@pytest.mark.parametrize(
+    "command", [LockCommand, UpdateCommand, AddCommand, RemoveCommand]
+)
+def test_export_triggers(mocker, command, plugin, dispatcher, event):
+    event._command = LockCommand()
+    event.io.write_line = mocker.Mock()
+    event.command.call = mocker.Mock()
+
+    plugin.export(event, "", dispatcher)
+
+    assert event.io.write_line.call_count >= 1
+    assert event.command.call.call_count == 1
