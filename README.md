@@ -33,6 +33,20 @@ The supported commands are:
 - add
 - remove
 
+## Creating multiple export files
+
+If you need to create multiple requirements files, e.g. `dev-requirements.txt` and `prod-requirements.txt`, use the following syntax:
+
+```toml
+[[tool.poetry-auto-export.exports]]
+output = "dev-requirements.txt"
+without = ["prod"]
+
+[[tool.poetry-auto-export.exports]]
+output = "prod-requirements.txt"
+without = ["dev"]
+```
+
 # Installation
 
 This is a poetry plugin, so it's meant to be installed inside the global poetry environment, not your project environment like regular pacakges.
@@ -79,7 +93,7 @@ The primary goal of the project is to make it more convenient to work with poetr
 
 Roadmap:
 
-- unit tests for the plugin
+- more unit tests for the plugin
 - integration tests for the plugin
-- proper configuration parsing
+- proper configuration parsing (note: typed dict and dataclasses can't support the `with` option, since it's a python keyword)
 - schema or exhaustive documentation of the supported configuration options

@@ -2,7 +2,7 @@ from cleo.events.console_events import TERMINATE
 from cleo.events.console_terminate_event import ConsoleTerminateEvent
 from cleo.events.event import Event
 from cleo.events.event_dispatcher import EventDispatcher
-from cleo.io.outputs.output import Verbosity
+from cleo.io.outputs.output import Output, Verbosity
 from poetry.console.application import Application
 from poetry.console.commands.add import AddCommand
 from poetry.console.commands.export import ExportCommand
@@ -13,64 +13,87 @@ from poetry.plugins.application_plugin import ApplicationPlugin
 from tomlkit.container import Container
 from tomlkit.items import Table
 
+Export = dict
+
 
 class PoetryAutoExport(ApplicationPlugin):
     def activate(self, application: Application):
-        self.config = self.parse_pyproject(application.poetry.pyproject.data)
         if not application.event_dispatcher:
             return
-        application.event_dispatcher.add_listener(TERMINATE, self.export)
+        self.configs = self._parse_pyproject(application.poetry.pyproject.data)
+        application.event_dispatcher.add_listener(TERMINATE, self.run_exports)
         return super().activate(application)
 
-    def parse_pyproject(self, pyproject: Container):
+    def _parse_pyproject(self, pyproject: Container) -> list[Export]:
+        """Parse the pyproject.toml file for export configuration(s)."""
+        configs: list[Export] = []
         tools = pyproject["tool"]
         if not isinstance(tools, Table):
-            return None
-        config = tools.get("poetry-auto-export", None)
-        if config and not isinstance(config, dict):
+            return configs
+        full_config = tools.get("poetry-auto-export", None)
+        if not full_config:
+            return configs
+        if not isinstance(full_config, dict):
             raise ValueError(
-                "Invalid pyproject.toml at [tool.poetry-auto-export]; must be an object!"
+                "pyproject.toml: [tool.poetry-auto-export] must be an object!"
             )
+        exports_list = full_config.pop("exports", None)
+        if exports_list and not isinstance(exports_list, list):
+            raise ValueError(
+                "pyproject.toml: [tool.poetry-auto-export.exports]; must be a list!"
+            )
+        elif exports_list:
+            for export in exports_list:
+                if config := self._parse_pyproject_section(export):
+                    configs.append(config)
+
+        if top_config := self._parse_pyproject_section(full_config):
+            configs.insert(0, top_config)
+
+        return configs
+
+    def _parse_pyproject_section(self, config: dict) -> Export | None:
+        """Parse an individual export section. This can be top-level or and element of the `exports` list."""
         if config and not isinstance(config.get("output"), str):
             raise ValueError(
                 "Invalid pyproject.toml at [tool.poetry-auto-export]; output=str is required."
             )
+        config.pop("exports", None)
         if not config:
             return None
-        return dict(config)
+        return Export(config)
 
-    def prepare_export_args(self):
+    def _prepare_export_args(self, export: Export, output: Output):
         """Prepare arguments for the export command."""
-        if not self.config:
-            return None
-
         options = []
-        if output := self.config.pop("output", None):
+        if output := export.pop("output", None):
             options.append(f" -o {output!r}")
-        if format := self.config.pop("format", None):
+        if format := export.pop("format", None):
             options.append(f"--format {format}")
 
-        if self.config.pop("without_hashes", None):
+        if export.pop("without_hashes", None):
             options.append("--without-hashes")
-        if self.config.pop("with_credentials", None):
+        if export.pop("with_credentials", None):
             options.append("--with-credentials")
-        if self.config.pop("without_urls", None):
+        if export.pop("without_urls", None):
             options.append("--without-urls")
-        if self.config.pop("all_extras", None):
+        if export.pop("all_extras", None):
             options.append("--all-extras")
 
-        if groups := self.config.pop("with", []):
+        if groups := export.pop("with", []):
             for group in groups:
                 options.append(f"--with={group!r}")
-        if groups := self.config.pop("without", []):
+        if groups := export.pop("without", []):
             for group in groups:
                 options.append(f"--without={group!r}")
-        if extras := self.config.pop("extras", []):
+        if extras := export.pop("extras", []):
             for extra in extras:
                 options.append(f"--extras={extra!r}")
-        return " ".join(options).strip() or None
+        if export:
+            output.write_line(f"<fg=red>Unknown export options:</> {export}")
+        return " ".join(options).strip()
 
-    def export(self, event: Event, event_name: str, dispatcher: EventDispatcher):
+    def run_exports(self, event: Event, event_name: str, dispatcher: EventDispatcher):
         if not isinstance(event, ConsoleTerminateEvent):
             return
         if event.exit_code:
@@ -86,15 +109,19 @@ class PoetryAutoExport(ApplicationPlugin):
             )
             return
 
-        if not self.config:
+        if not self.configs:
             event.io.write_line(
                 "Skipping requirements export as no configuration was found.",
                 Verbosity.VERY_VERBOSE,
             )
             return
 
-        out_file = str(self.config["output"])
-        args = self.prepare_export_args()
+        for export in self.configs:
+            self._run_export(event, export)
+
+    def _run_export(self, event, export):
+        out_file = str(export["output"])
+        args = self._prepare_export_args(export, event.io.output)
 
         event.io.write_line(f"<fg=blue>Exporting dependencies to</> {out_file}")
         command_message = f"> <fg=dark_gray>poetry export {args}</>"
