@@ -48,7 +48,7 @@ def test_empty_config_parsing(data, expected):
     plugin = PoetryAutoExport()
     container = Container()
     container.update(data)
-    assert plugin.parse_pyproject(container) == expected
+    assert plugin._parse_pyproject(container) == expected
 
 
 @pytest.mark.parametrize(
@@ -63,7 +63,7 @@ def test_invalid_config_parsing(data):
     container = Container()
     container.update(data)
     with pytest.raises(ValueError):
-        plugin.parse_pyproject(container)
+        plugin._parse_pyproject(container)
 
 
 @pytest.mark.parametrize(
@@ -93,8 +93,7 @@ def test_invalid_config_parsing(data):
 )
 def test_prepare_export_args(config, args):
     plugin = PoetryAutoExport()
-    plugin.config = config
-    assert plugin.prepare_export_args() == args
+    assert plugin._prepare_export_args(config, Output()) == args
 
 
 @pytest.fixture
@@ -114,29 +113,29 @@ def event() -> Event:
 @pytest.fixture
 def plugin() -> PoetryAutoExport:
     p = PoetryAutoExport()
-    p.config = {"output": "requirements.txt"}
+    p.configs = [{"output": "requirements.txt"}]
     return p
 
 
-def test_export_skips_random_event(plugin, dispatcher, event):
+def test_export_skips_random_event(plugin: PoetryAutoExport, dispatcher, event):
     event._command = Command()
-    assert plugin.export(event, "", dispatcher) is None
+    assert plugin.run_exports(event, "", dispatcher) is None
 
 
-def test_export_skips_on_export(plugin, dispatcher, event):
+def test_export_skips_on_export(plugin: PoetryAutoExport, dispatcher, event):
     event._command = ExportCommand()
-    assert plugin.export(event, "", dispatcher) is None
+    assert plugin.run_exports(event, "", dispatcher) is None
 
 
 @pytest.mark.parametrize(
     "command", [LockCommand, UpdateCommand, AddCommand, RemoveCommand]
 )
-def test_export_triggers(mocker, command, plugin, dispatcher, event):
-    event._command = LockCommand()
+def test_export_triggers(mocker, command, plugin: PoetryAutoExport, dispatcher, event):
+    event._command = command()
     event.io.write_line = mocker.Mock()
     event.command.call = mocker.Mock()
 
-    plugin.export(event, "", dispatcher)
+    plugin.run_exports(event, "", dispatcher)
 
     assert event.io.write_line.call_count >= 1
     assert event.command.call.call_count == 1
