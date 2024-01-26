@@ -6,6 +6,7 @@ from cleo.events.event_dispatcher import EventDispatcher
 from cleo.io.inputs.input import Input
 from cleo.io.io import IO
 from cleo.io.outputs.output import Output
+from pytest_mock import MockerFixture
 from tomlkit.container import Container
 
 from poetry_auto_export.plugin import (
@@ -18,8 +19,27 @@ from poetry_auto_export.plugin import (
 )
 
 
-def test_placeholder():
-    assert PoetryAutoExport()
+@pytest.fixture
+def dispatcher() -> EventDispatcher:
+    return EventDispatcher()
+
+
+@pytest.fixture
+def event(mocker: MockerFixture) -> Event:
+    e = ConsoleTerminateEvent(
+        command=LockCommand(),
+        exit_code=0,
+        io=IO(input=Input(), output=Output(), error_output=Output()),
+    )
+    e.io.write_line = mocker.Mock()
+    return e
+
+
+@pytest.fixture
+def plugin() -> PoetryAutoExport:
+    p = PoetryAutoExport()
+    p.configs = [{"output": "requirements.txt"}]
+    return p
 
 
 @pytest.mark.parametrize(
@@ -44,11 +64,59 @@ def test_placeholder():
         ),
     ],
 )
-def test_config_parsing(data, expected):
-    plugin = PoetryAutoExport()
+def test_config_parsing(data, expected, plugin: PoetryAutoExport):
     container = Container()
     container.update(data)
     assert plugin._parse_pyproject(container) == expected
+
+
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        (
+            {
+                "tool": {
+                    "poetry-auto-export": {"exports": [{"output": "requirements.txt"}]}
+                }
+            },
+            [{"output": "requirements.txt"}],
+        ),
+        (
+            {
+                "tool": {
+                    "poetry-auto-export": {
+                        "exports": [
+                            {"output": "requirements.txt", "without_hashes": True},
+                            {"output": "dev-requirements.txt"},
+                        ]
+                    }
+                }
+            },
+            [
+                {"output": "requirements.txt", "without_hashes": True},
+                {"output": "dev-requirements.txt"},
+            ],
+        ),
+    ],
+)
+def test_nested_config_parsing(data, expected, plugin: PoetryAutoExport):
+    container = Container()
+    container.update(data)
+    assert plugin._parse_pyproject(container) == expected
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {"tool": {"poetry-auto-export": {"exports": "invalid"}}},
+        {"tool": {"poetry-auto-export": {"exports": [{"output": 1}]}}},
+    ],
+)
+def test_invalid_config_parsing_exports(data, plugin: PoetryAutoExport):
+    container = Container()
+    container.update(data)
+    with pytest.raises(ValueError):
+        plugin._parse_pyproject(container)
 
 
 @pytest.mark.parametrize(
@@ -58,8 +126,7 @@ def test_config_parsing(data, expected):
         {"tool": {"poetry-auto-export": {"output": 1}}},
     ],
 )
-def test_invalid_config_parsing(data):
-    plugin = PoetryAutoExport()
+def test_invalid_config_parsing(data, plugin: PoetryAutoExport):
     container = Container()
     container.update(data)
     with pytest.raises(ValueError):
@@ -91,30 +158,8 @@ def test_invalid_config_parsing(data):
         ),
     ],
 )
-def test_prepare_export_args(config, args):
-    plugin = PoetryAutoExport()
+def test_prepare_export_args(config, args, plugin: PoetryAutoExport):
     assert plugin._prepare_export_args(config, Output()) == args
-
-
-@pytest.fixture
-def dispatcher() -> EventDispatcher:
-    return EventDispatcher()
-
-
-@pytest.fixture
-def event() -> Event:
-    return ConsoleTerminateEvent(
-        command=LockCommand(),
-        exit_code=0,
-        io=IO(input=Input(), output=Output(), error_output=Output()),
-    )
-
-
-@pytest.fixture
-def plugin() -> PoetryAutoExport:
-    p = PoetryAutoExport()
-    p.configs = [{"output": "requirements.txt"}]
-    return p
 
 
 def test_export_skips_random_event(plugin: PoetryAutoExport, dispatcher, event):
@@ -130,12 +175,30 @@ def test_export_skips_on_export(plugin: PoetryAutoExport, dispatcher, event):
 @pytest.mark.parametrize(
     "command", [LockCommand, UpdateCommand, AddCommand, RemoveCommand]
 )
-def test_export_triggers(mocker, command, plugin: PoetryAutoExport, dispatcher, event):
+def test_export_triggers(
+    mocker: MockerFixture, command, plugin: PoetryAutoExport, dispatcher, event
+):
     event._command = command()
-    event.io.write_line = mocker.Mock()
     event.command.call = mocker.Mock()
 
     plugin.run_exports(event, "", dispatcher)
 
     assert event.io.write_line.call_count >= 1
     assert event.command.call.call_count == 1
+
+
+def test_multiple_exports(
+    mocker: MockerFixture, plugin: PoetryAutoExport, dispatcher, event
+):
+    event._command = LockCommand()
+    event.command.call = mocker.Mock()
+    plugin.configs = [
+        {"output": "requirements.txt"},
+        {"output": "requirements-dev.txt", "without": ["dev"]},
+    ]
+
+    plugin.run_exports(event, "", dispatcher)
+
+    assert event.io.write_line.call_count >= 1
+    assert event.command.call.call_count == 2
+    assert event.command.call.call_count == 2
