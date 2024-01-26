@@ -18,31 +18,50 @@ Export = dict
 
 class PoetryAutoExport(ApplicationPlugin):
     def activate(self, application: Application):
-        self.configs: list[Export] = []
-        basic_export = self._parse_pyproject(application.poetry.pyproject.data)
-        if basic_export:
-            self.configs.append(basic_export)
         if not application.event_dispatcher:
             return
+        self.configs = self._parse_pyproject(application.poetry.pyproject.data)
         application.event_dispatcher.add_listener(TERMINATE, self.run_exports)
         return super().activate(application)
 
-    def _parse_pyproject(self, pyproject: Container):
+    def _parse_pyproject(self, pyproject: Container) -> list[Export]:
+        """Parse the pyproject.toml file for export configuration(s)."""
+        configs: list[Export] = []
         tools = pyproject["tool"]
         if not isinstance(tools, Table):
-            return None
-        config = tools.get("poetry-auto-export", None)
-        if config and not isinstance(config, dict):
+            return configs
+        full_config = tools.get("poetry-auto-export", None)
+        if not full_config:
+            return configs
+        if not isinstance(full_config, dict):
             raise ValueError(
-                "Invalid pyproject.toml at [tool.poetry-auto-export]; must be an object!"
+                "pyproject.toml: [tool.poetry-auto-export] must be an object!"
             )
+        exports_list = full_config.pop("exports", None)
+        if exports_list and not isinstance(exports_list, list):
+            raise ValueError(
+                "pyproject.toml: [tool.poetry-auto-export.exports]; must be a list!"
+            )
+        elif exports_list:
+            for export in exports_list:
+                if config := self._parse_pyproject_section(export):
+                    configs.append(config)
+
+        if top_config := self._parse_pyproject_section(full_config):
+            configs.insert(0, top_config)
+
+        return configs
+
+    def _parse_pyproject_section(self, config: dict) -> Export | None:
+        """Parse an individual export section. This can be top-level or and element of the `exports` list."""
         if config and not isinstance(config.get("output"), str):
             raise ValueError(
                 "Invalid pyproject.toml at [tool.poetry-auto-export]; output=str is required."
             )
+        config.pop("exports", None)
         if not config:
             return None
-        return dict(config)
+        return Export(config)
 
     def _prepare_export_args(self, export: Export, output: Output):
         """Prepare arguments for the export command."""

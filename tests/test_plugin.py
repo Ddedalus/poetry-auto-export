@@ -25,11 +25,11 @@ def test_placeholder():
 @pytest.mark.parametrize(
     "data, expected",
     [
-        ({"tool": {}}, None),
-        ({"tool": {"poetry-auto-export": {}}}, None),
+        ({"tool": {}}, []),
+        ({"tool": {"poetry-auto-export": {}}}, []),
         (
             {"tool": {"poetry-auto-export": {"output": "requirements.txt"}}},
-            {"output": "requirements.txt"},
+            [{"output": "requirements.txt"}],
         ),
         (
             {
@@ -40,11 +40,11 @@ def test_placeholder():
                     }
                 }
             },
-            {"output": "requirements.txt", "without_hashes": True},
+            [{"output": "requirements.txt", "without_hashes": True}],
         ),
     ],
 )
-def test_empty_config_parsing(data, expected):
+def test_config_parsing(data, expected):
     plugin = PoetryAutoExport()
     container = Container()
     container.update(data)
@@ -63,7 +63,7 @@ def test_invalid_config_parsing(data):
     container = Container()
     container.update(data)
     with pytest.raises(ValueError):
-        plugin._parse_pyproject(container)
+        plugin._parse_pyproject_section(container)
 
 
 @pytest.mark.parametrize(
