@@ -1,0 +1,9 @@
+[[tool.poetry-auto-export.exports]]
+output = "requirements-dev.txt"
+without_hashes = true
+
+
+[[tool.poetry-auto-export.exports]]
+output = "requirements.txt"
+without = ["dev"]
+without_hashes = true

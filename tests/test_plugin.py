@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import pytest
+import tomlkit
 from cleo.commands.command import Command
 from cleo.events.console_terminate_event import ConsoleTerminateEvent
 from cleo.events.event import Event
@@ -202,3 +205,11 @@ def test_multiple_exports(
     assert event.io.write_line.call_count >= 1
     assert event.command.call.call_count == 2
     assert event.command.call.call_count == 2
+
+
+def test_config_loading_from_pyproject(plugin: PoetryAutoExport):
+    path = Path(__file__).parent / "fixtures" / "multiple_pyproject.toml"
+    pyproject = tomlkit.parse(path.read_text())
+    config = plugin._parse_pyproject(pyproject)
+
+    assert len(config) == 2
