@@ -213,3 +213,11 @@ def test_config_loading_from_pyproject(plugin: PoetryAutoExport):
     config = plugin._parse_pyproject(pyproject)
 
     assert len(config) == 2
+
+
+def test_incorrect_table_type(plugin: PoetryAutoExport):
+    path = Path(__file__).parent / "fixtures" / "out_of_order_table.toml"
+    pyproject = tomlkit.parse(path.read_text())
+    config = plugin._parse_pyproject(pyproject)
+
+    assert len(config) == 1
