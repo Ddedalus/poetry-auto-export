@@ -11,7 +11,6 @@ from poetry.console.commands.remove import RemoveCommand
 from poetry.console.commands.update import UpdateCommand
 from poetry.plugins.application_plugin import ApplicationPlugin
 from tomlkit.container import Container
-from tomlkit.items import Table
 
 Export = dict
 
@@ -28,7 +27,7 @@ class PoetryAutoExport(ApplicationPlugin):
         """Parse the pyproject.toml file for export configuration(s)."""
         configs: list[Export] = []
         tools = pyproject["tool"]
-        if not isinstance(tools, Table):
+        if not isinstance(tools, dict):
             return configs
         full_config = tools.get("poetry-auto-export", None)
         if not full_config:

@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "SomeName"
+version = "0.1.0"
+description = ""
+authors = ["Me"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+promptflow = "1.6.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+pytest-cov = "*"
+flake8 = "*"
+flake8-docstrings = "*"
+mypy = "*"
+isort = "*"
+autoflake = "*"
+yapf = "*"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[[tool.poetry-auto-export.exports]]
+output = "dev-requirements.txt"
+without_hashes = true
