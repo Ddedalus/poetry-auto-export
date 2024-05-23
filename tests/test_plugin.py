@@ -227,11 +227,19 @@ def test_incorrect_table_type(plugin: PoetryAutoExport):
 
 def test_activate_current_directory(plugin: PoetryAutoExport):
     application = Application()
+    assert application.event_dispatcher
+    listeners_count = len(application.event_dispatcher._listeners)
+
     plugin.activate(application)
+
+    assert len(application.event_dispatcher._listeners) == listeners_count + 1
 
 
 @pytest.fixture
 def cwd_without_pyproject(tmp_path: Path):
+    """This scenario represents a new project, where there is no pyproject.toml file yet.
+    User may want to run `poetry init` or just `poetry --help`
+    """
     cwd = os.getcwd()
     os.chdir(tmp_path)
     yield tmp_path
@@ -240,4 +248,9 @@ def cwd_without_pyproject(tmp_path: Path):
 
 def test_activate_no_pyproject_present(cwd_without_pyproject, plugin: PoetryAutoExport):
     application = Application()
+    assert application.event_dispatcher
+    listeners_count = len(application.event_dispatcher._listeners)
+
     plugin.activate(application)
+
+    assert len(application.event_dispatcher._listeners) == listeners_count
