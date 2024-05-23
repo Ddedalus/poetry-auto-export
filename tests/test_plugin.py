@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -9,6 +10,7 @@ from cleo.events.event_dispatcher import EventDispatcher
 from cleo.io.inputs.input import Input
 from cleo.io.io import IO
 from cleo.io.outputs.output import Output
+from poetry.console.application import Application
 from pytest_mock import MockerFixture
 from tomlkit.container import Container
 
@@ -221,3 +223,34 @@ def test_incorrect_table_type(plugin: PoetryAutoExport):
     config = plugin._parse_pyproject(pyproject)
 
     assert len(config) == 1
+
+
+def test_activate_current_directory(plugin: PoetryAutoExport):
+    application = Application()
+    assert application.event_dispatcher
+    listeners_count = len(application.event_dispatcher._listeners)
+
+    plugin.activate(application)
+
+    assert len(application.event_dispatcher._listeners) == listeners_count + 1
+
+
+@pytest.fixture
+def cwd_without_pyproject(tmp_path: Path):
+    """This scenario represents a new project, where there is no pyproject.toml file yet.
+    User may want to run `poetry init` or just `poetry --help`
+    """
+    cwd = os.getcwd()
+    os.chdir(tmp_path)
+    yield tmp_path
+    os.chdir(cwd)
+
+
+def test_activate_no_pyproject_present(cwd_without_pyproject, plugin: PoetryAutoExport):
+    application = Application()
+    assert application.event_dispatcher
+    listeners_count = len(application.event_dispatcher._listeners)
+
+    plugin.activate(application)
+
+    assert len(application.event_dispatcher._listeners) == listeners_count

@@ -19,6 +19,10 @@ class PoetryAutoExport(ApplicationPlugin):
     def activate(self, application: Application):
         if not application.event_dispatcher:
             return
+        try:
+            application.poetry
+        except RuntimeError:
+            return
         self.configs = self._parse_pyproject(application.poetry.pyproject.data)
         application.event_dispatcher.add_listener(TERMINATE, self.run_exports)
         return super().activate(application)
