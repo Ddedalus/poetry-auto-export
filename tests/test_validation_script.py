@@ -2,8 +2,10 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from poetry.console.application import Application
+from pytest_mock import MockerFixture
 
-from poetry_auto_export.plugin import PoetryAutoExport
+from poetry_auto_export.plugin import LockCommand, PoetryAutoExport
 
 repo_root = Path(__file__).parent.parent
 validation_script_path = (
@@ -13,14 +15,23 @@ validation_script_path = (
 
 @pytest.fixture
 def valid_project(
+    mocker: MockerFixture,
     basic_project: Path,
     event,
     dispatcher,
     plugin: PoetryAutoExport,
 ) -> Path:
-    """A poetry project with up-to-date generated requirements.txt file."""
-    # TODO: call the plugin directly instead to save time
-    subprocess.run(["poetry", "lock"], cwd=basic_project)
+    """
+    A poetry project with up-to-date generated requirements.txt file.
+    This fixture only runs the part of the plugin responsible for generating the commeent in requirements.txt.
+    """
+    application = Application()
+    event._command = LockCommand()
+    event.command.call = mocker.Mock()
+    (basic_project / "requirements.txt").write_text("Placeholder value")
+    # When
+    plugin.activate(application)
+    plugin.run_exports(event, "", dispatcher)
     return basic_project
 
 
@@ -59,3 +70,20 @@ def test_validation_script_missing_files(valid_project: Path, file_name: str):
 
     assert result.returncode == 1
     assert "File not found" in result.stderr.decode()
+
+
+def test_validation_script_outdated_requirements(valid_project: Path):
+    """
+    Execute validation_script.py with lock file modified but requirements.txt not updated.
+    Check there is non-zero exit code and suitable message.
+    """
+    lock_file = valid_project / "poetry.lock"
+    lock_file.write_text(lock_file.read_text() + " ")
+
+    result = subprocess.run(
+        ["python", validation_script_path], cwd=valid_project, capture_output=True
+    )
+
+    assert result.returncode == 1
+    assert "requirements.txt is out of date" in result.stderr.decode()
+    assert "poetry-auto-export" in result.stderr.decode()
