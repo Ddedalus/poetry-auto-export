@@ -154,7 +154,7 @@ class PoetryAutoExport(ApplicationPlugin):
             content = f.read()
             f.seek(0, 0)
             if lock_hash:
-                f.write(f"# {lock_hash}\n")
+                f.write(f"# poetry.lock hash: {lock_hash}\n")
             else:
                 f.write("# <missing poetry.lock file>\n")
             f.write(
