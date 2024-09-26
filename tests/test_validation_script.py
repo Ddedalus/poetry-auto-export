@@ -8,8 +8,8 @@ from pytest_mock import MockerFixture
 from poetry_auto_export.plugin import LockCommand, PoetryAutoExport
 
 repo_root = Path(__file__).parent.parent
-validation_script_path = (
-    repo_root / "poetry_auto_export/validation_script.py"
+check_requirements_file_path = (
+    repo_root / "poetry_auto_export/check_requirements_file.py"
 ).absolute()
 
 
@@ -35,17 +35,19 @@ def valid_project(
     return basic_project
 
 
-def test_validation_script_pass(valid_project: Path):
-    """Execute validation_script.py using subprocess and check exit code is zero."""
-    exit_code = subprocess.call(["python", validation_script_path], cwd=valid_project)
+def test_script_pass(valid_project: Path):
+    """Execute check_requirements_file.py using subprocess and check exit code is zero."""
+    exit_code = subprocess.call(
+        ["python", check_requirements_file_path], cwd=valid_project
+    )
     assert exit_code == 0
 
 
-def test_validation_script_help(basic_project: Path):
-    """Execute validation_script.py with --help and check exit code is zero.
+def test_script_help(basic_project: Path):
+    """Execute check_requirements_file.py with --help and check exit code is zero.
     The script should also display the help message."""
     result = subprocess.run(
-        ["python", validation_script_path, "--help"],
+        ["python", check_requirements_file_path, "--help"],
         capture_output=True,
         cwd=basic_project,
     )
@@ -57,31 +59,31 @@ def test_validation_script_help(basic_project: Path):
     "file_name",
     ["poetry.lock", "requirements.txt"],
 )
-def test_validation_script_missing_files(valid_project: Path, file_name: str):
+def test_script_missing_files(valid_project: Path, file_name: str):
     """
-    Execute validation_script.py with a missing poetry.lock or requirements file.
+    Execute check_requirements_file.py with a missing poetry.lock or requirements file.
     Check there is non-zero exit code and suitable message.
     """
     (valid_project / file_name).unlink()
 
     result = subprocess.run(
-        ["python", validation_script_path], cwd=valid_project, capture_output=True
+        ["python", check_requirements_file_path], cwd=valid_project, capture_output=True
     )
 
     assert result.returncode == 1
     assert "File not found" in result.stderr.decode()
 
 
-def test_validation_script_outdated_requirements(valid_project: Path):
+def test_script_outdated_requirements(valid_project: Path):
     """
-    Execute validation_script.py with lock file modified but requirements.txt not updated.
+    Execute check_requirements_file.py with lock file modified but requirements.txt not updated.
     Check there is non-zero exit code and suitable message.
     """
     lock_file = valid_project / "poetry.lock"
     lock_file.write_text(lock_file.read_text() + " ")
 
     result = subprocess.run(
-        ["python", validation_script_path], cwd=valid_project, capture_output=True
+        ["python", check_requirements_file_path], cwd=valid_project, capture_output=True
     )
 
     assert result.returncode == 1

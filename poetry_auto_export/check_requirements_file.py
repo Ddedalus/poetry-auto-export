@@ -4,9 +4,9 @@ It computes a SHA1 hash of `poetry.lock` and compares that with a comment in the
 
 Usage:
 ```
-python validation_script.py
+python check_requirements_file.py
 # for custom file paths:
-python validation_script.py path/to/poetry.lock path/to/requirements.txt
+python check_requirements_file.py path/to/poetry.lock path/to/requirements.txt
 ```
 """
 

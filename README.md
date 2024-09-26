@@ -56,6 +56,19 @@ if first_line != f"# poetry.lock hash: {lock_hash}":
     raise ValueError("requirements.txt is out of date, use the `poetry-auto-export` plugin to update it!")
 ```
 
+A slightly more fancy version of the above script is shipped with this package.
+It can also be downloaded from the Github repository directly, e.g.
+
+```bash
+curl -O https://raw.githubusercontent.com/ddedalus/poetry-auto-export/main/check_requirements_file.py
+```
+
+Or piped straight into python, right in your CI/CD pipeline:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/ddedalus/poetry-auto-export/main/check_requirements_file.py | python3 -
+```
+
 ## Creating multiple export files
 
 If you need to create multiple requirements files, e.g. `dev-requirements.txt` and `prod-requirements.txt`, use the following syntax:
