@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "example-app"
+authors = ["example@example.com"]
+description = "Example app"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "*"
+
+[tool.poetry-auto-export]
+output = "requirements.txt"
+without_hashes = true

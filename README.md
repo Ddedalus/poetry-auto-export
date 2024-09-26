@@ -33,6 +33,38 @@ The supported commands are:
 - add
 - remove
 
+## Detect lock file changes
+
+Suppose you're working on a project with CI/CD and several contributors. You want the CI/CD to depend on the `requirements.txt` file created by `poetry-auto-export`, but you need to make sure everyone updates the `requirements.txt` file correctly.
+
+To make this easy, `poetry-auto-export` puts a SHA1 hash in a comment on top of `requirements.xtx` file. In CI/CD you can quickly compute the hash and compare that with the comment without installing poetry or any other dependencies.
+
+Here is an example python script that does this:
+
+```python
+import hashlib
+from pathlib import Path
+
+lock_hash = hashlib.sha1(Path("poetry.lock").read_bytes()).hexdigest()
+first_line = Path("requirements.txt").read_text().split("\n")[0]
+
+if first_line != f"# poetry.lock hash: {lock_hash}":
+    raise ValueError("requirements.txt is out of date, use the `poetry-auto-export` plugin to update it!")
+```
+
+A more fancy version of the above script is shipped with this package as `check_requirements_file.py`.
+You can also download it from the Github repository directly, e.g.
+
+```bash
+curl -O https://raw.githubusercontent.com/ddedalus/poetry-auto-export/main/check_requirements_file.py
+```
+
+Or pipe straight into python, for a quick one-liner:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/ddedalus/poetry-auto-export/main/check_requirements_file.py | python3 -
+```
+
 ## Creating multiple export files
 
 If you need to create multiple requirements files, e.g. `dev-requirements.txt` and `prod-requirements.txt`, use the following syntax:
