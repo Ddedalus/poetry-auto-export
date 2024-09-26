@@ -56,13 +56,13 @@ A more fancy version of the above script is shipped with this package as `check_
 You can also download it from the Github repository directly, e.g.
 
 ```bash
-curl -O https://raw.githubusercontent.com/ddedalus/poetry-auto-export/main/check_requirements_file.py
+curl -O https://raw.githubusercontent.com/Ddedalus/poetry-auto-export/refs/heads/main/poetry_auto_export/check_requirements_file.py
 ```
 
 Or pipe straight into python, for a quick one-liner:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/ddedalus/poetry-auto-export/main/check_requirements_file.py | python3 -
+curl -sSL https://raw.githubusercontent.com/Ddedalus/poetry-auto-export/refs/heads/main/poetry_auto_export/check_requirements_file.py | python3 -
 ```
 
 ## Creating multiple export files
