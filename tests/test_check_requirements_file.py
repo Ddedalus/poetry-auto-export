@@ -8,9 +8,7 @@ from pytest_mock import MockerFixture
 from poetry_auto_export.plugin import LockCommand, PoetryAutoExport
 
 repo_root = Path(__file__).parent.parent
-check_requirements_file_path = (
-    repo_root / "poetry_auto_export/check_requirements_file.py"
-).absolute()
+script_path = (repo_root / "poetry_auto_export/check_requirements_file.py").absolute()
 
 
 @pytest.fixture
@@ -37,9 +35,7 @@ def valid_project(
 
 def test_script_pass(valid_project: Path):
     """Execute check_requirements_file.py using subprocess and check exit code is zero."""
-    exit_code = subprocess.call(
-        ["python", check_requirements_file_path], cwd=valid_project
-    )
+    exit_code = subprocess.call(["python", script_path], cwd=valid_project)
     assert exit_code == 0
 
 
@@ -47,7 +43,7 @@ def test_script_help(basic_project: Path):
     """Execute check_requirements_file.py with --help and check exit code is zero.
     The script should also display the help message."""
     result = subprocess.run(
-        ["python", check_requirements_file_path, "--help"],
+        ["python", script_path, "--help"],
         capture_output=True,
         cwd=basic_project,
     )
@@ -67,7 +63,7 @@ def test_script_missing_files(valid_project: Path, file_name: str):
     (valid_project / file_name).unlink()
 
     result = subprocess.run(
-        ["python", check_requirements_file_path], cwd=valid_project, capture_output=True
+        ["python", script_path], cwd=valid_project, capture_output=True
     )
 
     assert result.returncode == 1
@@ -83,7 +79,7 @@ def test_script_outdated_requirements(valid_project: Path):
     lock_file.write_text(lock_file.read_text() + " ")
 
     result = subprocess.run(
-        ["python", check_requirements_file_path], cwd=valid_project, capture_output=True
+        ["python", script_path], cwd=valid_project, capture_output=True
     )
 
     assert result.returncode == 1
