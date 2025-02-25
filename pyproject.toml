@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "poetry-auto-export"
-version = "0.3.1"
+version = "0.4.0"
 description = "Automatically create requirements.txt on every poetry lock"
 authors = ["Hubert Bereś <h.beres@hotmail.com>"]
 license = "MIT"
@@ -9,7 +9,7 @@ repository = "https://github.com/Ddedalus/poetry-auto-export"
 packages = [{ include = "poetry_auto_export" }]
 [tool.poetry.dependencies]
 python = "^3.10"
-poetry = "^1.6.0"
+poetry = ">=1.6.0,<3.0.0"
 poetry-plugin-export = "^1.6.0"
 
 
