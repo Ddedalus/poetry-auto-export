@@ -8,11 +8,11 @@ from cleo.events.event_dispatcher import EventDispatcher
 from cleo.io.outputs.output import Output, Verbosity
 from poetry.console.application import Application
 from poetry.console.commands.add import AddCommand
-from poetry.console.commands.export import ExportCommand
 from poetry.console.commands.lock import LockCommand
 from poetry.console.commands.remove import RemoveCommand
 from poetry.console.commands.update import UpdateCommand
 from poetry.plugins.application_plugin import ApplicationPlugin
+from poetry_plugin_export.command import ExportCommand
 from tomlkit.container import Container
 
 Export = dict
