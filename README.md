@@ -37,7 +37,7 @@ The supported commands are:
 
 Suppose you're working on a project with CI/CD and several contributors. You want the CI/CD to depend on the `requirements.txt` file created by `poetry-auto-export`, but you need to make sure everyone updates the `requirements.txt` file correctly.
 
-To make this easy, `poetry-auto-export` puts a SHA1 hash in a comment on top of `requirements.xtx` file. In CI/CD you can quickly compute the hash and compare that with the comment without installing poetry or any other dependencies.
+To make this easy, `poetry-auto-export` puts a SHA1 hash in a comment on top of `requirements.txt` file. In CI/CD you can quickly compute the hash and compare that with the comment without installing poetry or any other dependencies.
 
 Here is an example python script that does this:
 
