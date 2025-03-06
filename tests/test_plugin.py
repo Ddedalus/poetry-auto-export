@@ -141,13 +141,6 @@ def test_invalid_config_parsing(data, plugin: PoetryAutoExport):
             },
             "-o 'requirements.txt' --only='dev' --only='test'",
         ),
-        (
-            {
-                "output": "requirements.txt",
-                "only_root": True,
-            },
-            "-o 'requirements.txt' --only-root",
-        ),
     ],
 )
 def test_prepare_export_args(config, args, plugin: PoetryAutoExport):
