@@ -1,6 +1,7 @@
 name: Test
 
 on:
+  workflow_dispatch:
   # run on open merge requests and on main branch
   pull_request:
     types: [opened, synchronize]
