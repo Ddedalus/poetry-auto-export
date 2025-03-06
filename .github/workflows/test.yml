@@ -23,24 +23,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install poetry
-        run: |
-          pip install poetry
-          poetry config virtualenvs.in-project true
-
-      - name: Set up cache for dependencies
-        uses: actions/cache@v4
-        id: cache
+      - uses: abatilo/actions-poetry@v2
         with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          poetry-version: 2.1.1
 
-      - name: Ensure cache is healthy
-        if: steps.cache.outputs.cache-hit == 'true'
-        run: poetry run pip --version >/dev/null 2>&1 || rm -rf .venv
-
-      - name: Install Dependencies
-        run: poetry install --with dev
-
-      - name: pytest
-        run: poetry run pytest
+      - name: Install the project dependencies
+        run: poetry install
+      - name: Run the automated tests (for example)
+        run: poetry run pytest -v
