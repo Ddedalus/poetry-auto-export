@@ -26,3 +26,40 @@ poetry-auto-export = "poetry_auto_export.plugin:PoetryAutoExport"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry-auto-export.exports]]
+output = "examples/requirements.txt"
+without_hashes = true
+
+[[tool.poetry-auto-export.exports]]
+output = "examples/requirements-only_dev.txt"
+only = ["dev"]
+without_hashes = true
+
+[[tool.poetry-auto-export.exports]]
+output = "examples/requirements-with_dev.txt"
+with = ["dev"]
+without_hashes = true
+
+[[tool.poetry-auto-export.exports]]
+output = "examples/requirements-without_dev.txt"
+without = ["dev"]
+without_hashes = true
+
+[[tool.poetry-auto-export.exports]]
+output = "examples/requirements-with_credentials.txt"
+without_hashes = true
+with_credentials = true
+
+[[tool.poetry-auto-export.exports]]
+output = "examples/requirements-without_urls.txt"
+without_hashes = true
+without_urls = true
+
+[[tool.poetry-auto-export.exports]]
+output = "examples/requirements-all_extras.txt"
+without_hashes = true
+all_extras = true
+
+[[tool.poetry-auto-export.exports]]
+output = "examples/requirements-with_hashes.txt"
