@@ -87,8 +87,6 @@ class PoetryAutoExport(ApplicationPlugin):
             options.append("--without-urls")
         if export.pop("all_extras", None):
             options.append("--all-extras")
-        if export.pop("only_root", None):
-            options.append("--only-root")
 
         if groups := export.pop("with", []):
             for group in groups:
