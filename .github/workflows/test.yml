@@ -1,6 +1,7 @@
 name: Test
 
 on:
+  workflow_dispatch:
   # run on open merge requests and on main branch
   pull_request:
     types: [opened, synchronize]
@@ -10,29 +11,34 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest, ubuntu-24.04-arm]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
-
-      - name: Install poetry
-        run: |
-          pip install poetry
-          poetry config virtualenvs.in-project true
-
-      - name: Set up cache for dependencies
-        uses: actions/cache@v4
-        id: cache
         with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          python-version: ${{ matrix.python-version }}
 
-      - name: Ensure cache is healthy
-        if: steps.cache.outputs.cache-hit == 'true'
-        run: poetry run pip --version >/dev/null 2>&1 || rm -rf .venv
+      - uses: abatilo/actions-poetry@v4
+        with:
+          poetry-version: 2.1.1
 
-      - name: Install Dependencies
-        run: poetry install --with dev
+      - name: Setup a local virtual environment (if no poetry.toml file)
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
 
-      - name: pytest
-        run: poetry run pytest
+      - uses: actions/cache@v4
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+
+      - name: Install the project dependencies
+        run: poetry install
+      - name: Run the automated tests (for example)
+        run: poetry run pytest -v
