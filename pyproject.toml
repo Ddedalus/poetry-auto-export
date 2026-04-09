@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "poetry-auto-export"
-version = "0.4.0"
+version = "0.4.2"
 description = "Automatically create requirements.txt on every poetry lock"
 authors = ["Hubert Bereś <h.beres@hotmail.com>"]
 license = "MIT"
