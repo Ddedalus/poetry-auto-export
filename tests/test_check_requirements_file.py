@@ -35,7 +35,7 @@ def valid_project(
 
 def test_script_pass(valid_project: Path):
     """Execute check_requirements_file.py using subprocess and check exit code is zero."""
-    exit_code = subprocess.call(["python", script_path], cwd=valid_project, check=True)
+    exit_code = subprocess.call(["python", script_path], cwd=valid_project)
     assert exit_code == 0
 
 
