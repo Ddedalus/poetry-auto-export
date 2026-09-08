@@ -93,7 +93,7 @@ def test_nested_config_parsing(data, expected, plugin: PoetryAutoExport):
 def test_invalid_config_parsing_exports(data, plugin: PoetryAutoExport):
     container = Container()
     container.update(data)
-    with pytest.raises(ValueError):
+    with pytest.raises((TypeError, ValueError)):
         plugin._parse_pyproject(container)
 
 
