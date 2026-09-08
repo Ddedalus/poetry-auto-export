@@ -49,7 +49,9 @@ lock_hash = hashlib.sha1(Path("poetry.lock").read_bytes()).hexdigest()
 first_line = Path("requirements.txt").read_text().split("\n")[0]
 
 if first_line != f"# poetry.lock hash: {lock_hash}":
-    raise ValueError("requirements.txt is out of date, use the `poetry-auto-export` plugin to update it!")
+    raise ValueError(
+        "requirements.txt is out of date, use the `poetry-auto-export` plugin to update it!"
+    )
 ```
 
 A more fancy version of the above script is shipped with this package as `check_requirements_file.py`.

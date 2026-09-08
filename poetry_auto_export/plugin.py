@@ -23,7 +23,7 @@ class PoetryAutoExport(ApplicationPlugin):
         if not application.event_dispatcher:
             return
         try:
-            application.poetry
+            application.poetry  # noqa: B018
         except RuntimeError:
             return
         self.configs = self._parse_pyproject(application.poetry.pyproject.data)
@@ -42,12 +42,12 @@ class PoetryAutoExport(ApplicationPlugin):
         if not full_config:
             return configs
         if not isinstance(full_config, dict):
-            raise ValueError(
+            raise TypeError(
                 "pyproject.toml: [tool.poetry-auto-export] must be an object!"
             )
         exports_list = full_config.pop("exports", None)
         if exports_list and not isinstance(exports_list, list):
-            raise ValueError(
+            raise TypeError(
                 "pyproject.toml: [tool.poetry-auto-export.exports]; must be a list!"
             )
         elif exports_list:

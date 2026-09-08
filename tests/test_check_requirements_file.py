@@ -35,7 +35,7 @@ def valid_project(
 
 def test_script_pass(valid_project: Path):
     """Execute check_requirements_file.py using subprocess and check exit code is zero."""
-    exit_code = subprocess.call(["python", script_path], cwd=valid_project)
+    exit_code = subprocess.call(["python", script_path], cwd=valid_project, check=True)
     assert exit_code == 0
 
 
@@ -46,6 +46,7 @@ def test_script_help(basic_project: Path):
         ["python", script_path, "--help"],
         capture_output=True,
         cwd=basic_project,
+        check=True,
     )
     assert result.returncode == 0
     assert "Usage" in result.stdout.decode()
@@ -63,7 +64,7 @@ def test_script_missing_files(valid_project: Path, file_name: str):
     (valid_project / file_name).unlink()
 
     result = subprocess.run(
-        ["python", script_path], cwd=valid_project, capture_output=True
+        ["python", script_path], cwd=valid_project, capture_output=True, check=False
     )
 
     assert result.returncode == 1
@@ -79,7 +80,10 @@ def test_script_outdated_requirements(valid_project: Path):
     lock_file.write_text(lock_file.read_text() + " ")
 
     result = subprocess.run(
-        ["python", script_path], cwd=valid_project, capture_output=True
+        ["python", script_path],
+        cwd=valid_project,
+        capture_output=True,
+        check=False,
     )
 
     assert result.returncode == 1
